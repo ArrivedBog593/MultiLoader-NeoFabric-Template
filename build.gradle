@@ -1,8 +1,11 @@
 // Plugin versions live here once; the modules apply them without one.
 plugins {
-    // Kept current: Loom refuses dependencies built with a newer Loom than
-    // itself. Versions: https://maven.fabricmc.net/fabric-loom/fabric-loom.gradle.plugin/maven-metadata.xml
-    id 'fabric-loom' version '1.16.3' apply false
+    // Since 26.1 Minecraft ships unobfuscated: net.fabricmc.fabric-loom is
+    // the Loom that neither maps nor remaps (fabric-loom stays for the
+    // obfuscated versions). Kept current: Loom refuses dependencies built
+    // with a newer Loom than itself.
+    // Versions: https://maven.fabricmc.net/net/fabricmc/fabric-loom/net.fabricmc.fabric-loom.gradle.plugin/maven-metadata.xml
+    id 'net.fabricmc.fabric-loom' version '1.19.4' apply false
     // Versions: https://projects.neoforged.net/neoforged/moddevgradle
-    id 'net.neoforged.moddev' version '2.0.141' apply false
+    id 'net.neoforged.moddev' version '2.0.148' apply false
 }

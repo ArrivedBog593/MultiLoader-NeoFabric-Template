@@ -1,26 +1,23 @@
 plugins {
     id 'multiloader-loader'
-    id 'fabric-loom'
+    id 'net.fabricmc.fabric-loom'
 }
 
 dependencies {
+    // Unobfuscated since 26.1: no mappings, and mods are plain dependencies
+    // (implementation/compileOnly, not modImplementation/modCompileOnly).
     minecraft "com.mojang:minecraft:${minecraft_version}"
-    mappings loom.layered {
-        officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-${parchment_minecraft_version}:${parchment_mappings_version}@zip")
-    }
-    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
 
     // Optional integrations: compile against them only, and test them by
-    // dropping the regular jars into the run's mods/ folder (Fabric Loader
-    // remaps them on the fly in the dev environment):
-    // modCompileOnly "maven.modrinth:modmenu:11.0.5"
+    // dropping the regular jars into the run's mods/ folder:
+    // compileOnly "maven.modrinth:modmenu:21.0.1"
     //
     // Without full Fabric API, single modules can be bundled jar-in-jar, as
     // Sodium does; players then install nothing extra, and with Fabric API
     // present the loader picks the newer copy of each module:
-    // include(modImplementation(fabricApi.module('fabric-api-base', fabric_api_version)))
+    // include(implementation(fabricApi.module('fabric-api-base', fabric_api_version)))
 }
 
 loom {
@@ -38,31 +35,28 @@ loom {
         // mods or worlds.
         client {
             client()
-            configName = 'Fabric Client'
-            ideConfigGenerated(true)
-            runDir("../run/${minecraft_version}/fabric/client")
+            displayName = 'Fabric Client'
+            generateRunConfig = true
+            runDirectory = file("../run/${minecraft_version}/fabric/client")
             // A fixed name, as NeoForge's run has. Without it vanilla makes
             // one up on every launch ("Player" + 3 digits of the clock), so
             // each run is a different player in the same world.
-            programArgs('--username', 'Dev')
+            programArguments.addAll('--username', 'Dev')
         }
         server {
             server()
-            configName = 'Fabric Server'
-            ideConfigGenerated(true)
-            runDir("../run/${minecraft_version}/fabric/server")
-            programArgs('--nogui')
+            displayName = 'Fabric Server'
+            generateRunConfig = true
+            runDirectory = file("../run/${minecraft_version}/fabric/server")
+            programArguments.add('--nogui')
         }
     }
 }
 
-// No refmap: Fabric runs on intermediary names outside the dev environment,
-// and Loom 1.13+ rewrites the mixin targets (common/'s too, compiled here)
-// straight into the remapped classes instead.
+// No refmap and no remapping: Fabric runs on the same Mojang names the
+// mixins are written in.
 
-// The mcgradleconventions loader attribute (see common/build.gradle). Loom's
-// remap configurations (modImplementation, modCompileOnly...) get it too:
-// they resolve dependencies of their own.
+// The mcgradleconventions loader attribute (see common/build.gradle).
 def loaderAttribute = Attribute.of('io.github.mcgradleconventions.loader', String)
 ['apiElements', 'runtimeElements', 'sourcesElements', 'javadocElements', 'includeInternal', 'modCompileClasspath'].each { variant ->
     configurations.named(variant) {
@@ -77,13 +71,6 @@ sourceSets.configureEach {
             attributes {
                 attribute(loaderAttribute, 'fabric')
             }
-        }
-    }
-}
-loom.remapConfigurations.configureEach {
-    configurations.named(it.name) {
-        attributes {
-            attribute(loaderAttribute, 'fabric')
         }
     }
 }
