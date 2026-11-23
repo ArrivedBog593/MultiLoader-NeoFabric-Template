@@ -15,6 +15,6 @@ public class MinecraftMixin {
     @Inject(method = "<init>", at = @At("TAIL"))
     private void examplemod$init(CallbackInfo info) {
         Constants.LOG.info("This line is printed by a common mixin, on Minecraft {}",
-                SharedConstants.getCurrentVersion().getName());
+                SharedConstants.getCurrentVersion().name());
     }
 }

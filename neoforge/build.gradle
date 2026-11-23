@@ -47,7 +47,7 @@ neoForge {
         // ./gradlew :neoforge:runData writes into src/generated/resources,
         // which ships with the NeoForge jar only.
         data {
-            data()
+            clientData()
             gameDirectory = rootProject.file("run/${minecraft_version}/neoforge/data")
             programArguments.addAll('--mod', mod_id, '--all',
                     '--output', file('src/generated/resources/').absolutePath,
