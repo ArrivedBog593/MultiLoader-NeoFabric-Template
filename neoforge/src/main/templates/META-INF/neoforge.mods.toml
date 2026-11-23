@@ -1,7 +1,5 @@
 # Every placeholder comes from gradle.properties, already escaped for a
 # double-quoted string (see multiloader-loader.gradle): keep them inside "".
-modLoader="javafml"
-loaderVersion="${loader_version_range}"
 license="${mod_license}"
 issueTrackerURL="${mod_issues_url}"
 

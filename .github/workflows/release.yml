@@ -25,6 +25,7 @@ jobs:
       mod_version: ${{ steps.verify.outputs.mod_version }}
       mc_version: ${{ steps.verify.outputs.mc_version }}
       java_version: ${{ steps.verify.outputs.java_version }}
+      daemon_java_version: ${{ steps.verify.outputs.daemon_java_version }}
       prerelease: ${{ steps.verify.outputs.prerelease }}
     steps:
       - name: Checkout
@@ -56,6 +57,8 @@ jobs:
           MOD_VERSION=$(prop mod_version)
           MC_VERSION=$(prop minecraft_version)
           JAVA_VERSION=$(prop java_version)
+          # The Java Gradle itself runs on (see build.yml).
+          DAEMON_JAVA_VERSION=$(grep -E "^toolchainVersion=" gradle/gradle-daemon-jvm.properties | cut -d= -f2 | tr -d "[:space:]")
           MOD_NAME=$(grep -E "^mod_name=" gradle.properties | head -n1 | cut -d= -f2- | sed 's/[[:space:]]*$//')
 
           echo "tag: $TAG_MOD / mc $TAG_MC | gradle.properties: $MOD_VERSION / mc $MC_VERSION"
@@ -81,6 +84,7 @@ jobs:
             echo "mod_version=$TAG_MOD"
             echo "mc_version=$TAG_MC"
             echo "java_version=$JAVA_VERSION"
+            echo "daemon_java_version=${DAEMON_JAVA_VERSION:-$JAVA_VERSION}"
             echo "prerelease=$PRERELEASE"
           } >> "$GITHUB_OUTPUT"
           {
@@ -103,7 +107,9 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
-          java-version: ${{ steps.verify.outputs.java_version }}
+          java-version: |
+            ${{ steps.verify.outputs.java_version }}
+            ${{ steps.verify.outputs.daemon_java_version }}
           distribution: "temurin"
 
       - name: Setup Gradle
@@ -113,7 +119,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build
-        run: ./gradlew build
+        env:
+          JAVA: ${{ steps.verify.outputs.java_version }}
+        # See build.yml: points Gradle at the JDK the mod is compiled for.
+        run: ./gradlew build "-Porg.gradle.java.installations.fromEnv=JAVA_HOME_${JAVA}_X64"
 
       # One jar per loader module this branch has, named exactly: a glob such
       # as */build/libs/*.jar would also pick up common/'s jar and the
@@ -176,7 +185,9 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
-          java-version: ${{ needs.build.outputs.java_version }}
+          java-version: |
+            ${{ needs.build.outputs.java_version }}
+            ${{ needs.build.outputs.daemon_java_version }}
           distribution: "temurin"
 
       - name: Setup Gradle
@@ -192,4 +203,5 @@ jobs:
           ORG_GRADLE_PROJECT_modMavenUrl: ${{ vars.MAVEN_URL }}
           ORG_GRADLE_PROJECT_modMavenUsername: ${{ secrets.MAVEN_USERNAME }}
           ORG_GRADLE_PROJECT_modMavenPassword: ${{ secrets.MAVEN_PASSWORD }}
-        run: ./gradlew publish
+          JAVA: ${{ needs.build.outputs.java_version }}
+        run: ./gradlew publish "-Porg.gradle.java.installations.fromEnv=JAVA_HOME_${JAVA}_X64"

@@ -90,6 +90,18 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
+// Development-only files that may sit among the resources, kept out of every
+// jar, sources jars included (as in the MDK): Blockbench projects and the
+// data generators' cache. On the tasks rather than the source set, since the
+// loaders copy common/'s resource folder as a whole.
+def devOnlyResources = ['**/*.bbmodel', '.cache/**', '**/.cache/**']
+tasks.withType(ProcessResources).configureEach {
+    exclude(devOnlyResources)
+}
+tasks.withType(Jar).configureEach {
+    exclude(devOnlyResources)
+}
+
 tasks.withType(Javadoc).configureEach {
     options.encoding = 'UTF-8'
     // Mixins and Minecraft's own classes are full of what doclint calls
