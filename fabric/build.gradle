@@ -1,6 +1,6 @@
 plugins {
     id 'multiloader-loader'
-    id 'fabric-loom'
+    id 'net.fabricmc.fabric-loom-remap'
 }
 
 dependencies {
@@ -38,20 +38,20 @@ loom {
         // mods or worlds.
         client {
             client()
-            configName = 'Fabric Client'
-            ideConfigGenerated(true)
-            runDir("../run/${minecraft_version}/fabric/client")
+            displayName = 'Fabric Client'
+            generateRunConfig = true
+            runDirectory = file("../run/${minecraft_version}/fabric/client")
             // A fixed name, as NeoForge's run has. Without it vanilla makes
             // one up on every launch ("Player" + 3 digits of the clock), so
             // each run is a different player in the same world.
-            programArgs('--username', 'Dev')
+            programArguments.addAll('--username', 'Dev')
         }
         server {
             server()
-            configName = 'Fabric Server'
-            ideConfigGenerated(true)
-            runDir("../run/${minecraft_version}/fabric/server")
-            programArgs('--nogui')
+            displayName = 'Fabric Server'
+            generateRunConfig = true
+            runDirectory = file("../run/${minecraft_version}/fabric/server")
+            programArguments.add('--nogui')
         }
     }
 }

@@ -8,15 +8,19 @@ Based on [jaredlll08/MultiLoader-Template](https://github.com/jaredlll08/MultiLo
 
 Every branch has the same layout and the same build logic; they differ in `gradle.properties`, the Loom plugin, and whatever Minecraft itself changed.
 
-| Branch | Minecraft | Java | NeoForge | Fabric Loader | Loom | Parchment |
+| Branch | Minecraft | Java (mod / Gradle) | NeoForge | Fabric Loader | Loom 1.19 | Parchment |
 |---|---|---|---|---|---|---|
-| `NeoFabric/1.21.1` | 1.21.1 | 21 | 21.1.235 | 0.19.5 | `fabric-loom` (remaps) | yes |
-| `NeoFabric/1.21.11` | 1.21.11 | 21 | 21.11.48 | 0.20.1 | `fabric-loom` (remaps) | yes |
-| `NeoFabric/26.1.2` | 26.1.2 | 25 | 26.1.2.126 | 0.20.1 | `net.fabricmc.fabric-loom` | no |
-| `NeoFabric/26.2` | 26.2 | 25 | 26.2.0.93 | 0.20.1 | `net.fabricmc.fabric-loom` | no |
-| `NeoFabric/26.3` | 26.3 | 25 | 26.3.0.113 | 0.20.1 | `net.fabricmc.fabric-loom` | no |
+| `NeoFabric/1.21.1` | 1.21.1 | 21 / 25 | 21.1.267 | 0.20.1 | `net.fabricmc.fabric-loom-remap` | yes |
+| `NeoFabric/1.21.11` | 1.21.11 | 21 / 25 | 21.11.48 | 0.20.1 | `net.fabricmc.fabric-loom-remap` | yes |
+| `NeoFabric/26.1.2` | 26.1.2 | 25 / 25 | 26.1.2.129 | 0.20.1 | `net.fabricmc.fabric-loom` | no |
+| `NeoFabric/26.2` | 26.2 | 25 / 25 | 26.2.0.95 | 0.20.1 | `net.fabricmc.fabric-loom` | no |
+| `NeoFabric/26.3` | 26.3 | 25 / 25 | 26.3.0.115 | 0.20.1 | `net.fabricmc.fabric-loom` | no |
 
-Since 26.1 Minecraft ships unobfuscated: Fabric runs on Mojang's names, so the 26.x branches have no mappings, no `mod*` configurations (`modImplementation` becomes `implementation`) and no Parchment (parameter names are included).
+Since 26.1 Minecraft ships unobfuscated: Fabric runs on Mojang's names, so the 26.x branches use the Loom that neither maps nor remaps, with no mappings, no `mod*` configurations (`modImplementation` becomes `implementation`) and no Parchment (parameter names are included). The 1.21.x branches use `net.fabricmc.fabric-loom-remap`, the same Loom under the name that remaps, as the official [Fabric example mod](https://github.com/FabricMC/fabric-example-mod) does.
+
+Loom 1.19 runs only on Java 25, so Gradle runs on 25 on every branch (`gradle/gradle-daemon-jvm.properties`), while the mod is compiled for `java_version`: the 1.21.x jars stay Java 21.
+
+From 1.21.11 on, `neoforge.mods.toml` has no `modLoader` and `loaderVersion`, as in the NeoForge MDK: both became optional.
 
 ## Getting started
 
@@ -51,12 +55,15 @@ run/           game directories of the dev runs (not in git)
 ## Building and running
 
 - `./gradlew build` builds `fabric/build/libs/<mod_id>-fabric-<version>+mc<minecraft>.jar` and the NeoForge one, plus sources and javadoc jars.
-- The IDE gets run configurations for both loaders: **Fabric Client/Server** and **NeoForge Client/Server/Data**. Each runs in `run/<minecraft>/<loader>/<side>/` at the root. `run/` is not in git, so all branches share it, but versions and loaders never mix mods or worlds.
+- The IDE gets run configurations for both loaders: **Fabric Client/Server** and **NeoForge Client/Server/Data/GameTestServer**. Each runs in `run/<minecraft>/<loader>/<side>/` at the root. `run/` is not in git, so all branches share it, but versions and loaders never mix mods or worlds.
 - The client runs always play as `Dev`, so worlds and inventories carry over between runs.
 - To test against other mods, drop their jars into the run's `mods/` folder. On the 1.21.x branches, Fabric Loader remaps them on the fly.
+- Or declare them with `localRuntime`: in the dev runs, but never in the published metadata. On Fabric it comes with Loom (`modLocalRuntime` on 1.21.x); on NeoForge it is set up as in the MDK.
 - `./gradlew :neoforge:runData` runs the data generators into `neoforge/src/generated/resources/`.
+- `./gradlew :neoforge:runGameTestServer` runs every registered game test and exits; it fails when the mod has none.
+- Blockbench projects (`*.bbmodel`) and the data generators' `.cache` can sit among the resources: no jar includes them.
 
-The build uses the configuration cache, parallel execution and the build cache (`gradle.properties`), and the Gradle daemon runs on the branch's Java version (`gradle/gradle-daemon-jvm.properties`).
+The build uses the configuration cache, parallel execution and the build cache (`gradle.properties`). The Gradle daemon runs on the Java in `gradle/gradle-daemon-jvm.properties`, which IntelliJ and `gradlew` download if missing.
 
 ## Mod metadata
 
@@ -98,7 +105,7 @@ Every variant carries the `io.github.mcgradleconventions.loader` attribute (`com
 
 All actions are pinned by commit SHA. Dependabot keeps them and the Gradle wrapper current on every branch listed in `.github/dependabot.yml`.
 
-**`build.yml`** builds every push and pull request, and uploads the jars as an artifact. It reads the Java version, the jar names and the loaders from the branch itself, so it is the same file on every branch. It also publishes:
+**`build.yml`** builds every push and pull request, and uploads the jars as an artifact. It reads the jar names, the loaders and both Java versions from the branch itself (it installs the JDK the mod is compiled for and the one Gradle runs on), so it is the same file on every branch. It also publishes:
 
 | To | When | Needs |
 |---|---|---|
@@ -121,7 +128,7 @@ The issue templates and `dependabot.yml` only take effect on the repository's de
 ## Porting to a new Minecraft version
 
 1. Branch off the newest branch: `NeoFabric/<new version>`.
-2. In `gradle.properties`, update `minecraft_version`, `minecraft_version_range`, `neo_form_version`, `neo_version`, `neo_version_range`, `loader_version_range` and `fabric_api_version`, plus Parchment where it applies. Then update the minimum loader and Mixin versions as described above.
-3. If the Java version changes, update `java_version`, the `compatibilityLevel` in the three `*.mixins.json`, and `gradle/gradle-daemon-jvm.properties` (`./gradlew updateDaemonJvm --jvm-version=<n>`).
+2. In `gradle.properties`, update `minecraft_version`, `minecraft_version_range`, `neo_form_version`, `neo_version`, `neo_version_range` and `fabric_api_version`, plus Parchment where it applies. Then update the minimum loader and Mixin versions as described above. The NeoForge MDK generator (neoforged.net/mod-generator) and the Fabric example mod's branch for that version are good references for what changed.
+3. If the Java version changes, update `java_version` and the `compatibilityLevel` in the three `*.mixins.json`. If it ever goes past the daemon's, also update `gradle/gradle-daemon-jvm.properties` (`./gradlew updateDaemonJvm --jvm-version=<n>`).
 4. Bump Loom and ModDevGradle in the root `build.gradle` if the new version needs them.
 5. Add the branch to `.github/dependabot.yml` and to the version dropdown in `.github/ISSUE_TEMPLATE/bug_report.yml` on the default branch.

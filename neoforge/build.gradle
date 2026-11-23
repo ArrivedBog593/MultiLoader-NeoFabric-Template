@@ -55,6 +55,15 @@ neoForge {
                     // dependency, not a Gradle project.
                     '--existing', rootProject.file('common/src/main/resources/').absolutePath)
         }
+
+        // Starts a GameTestServer, runs every registered game test of the
+        // namespaces in neoforge.enabledGameTestNamespaces, then exits: for
+        // CI (./gradlew :neoforge:runGameTestServer). It crashes when the mod
+        // registers no game tests. In the other runs, /test runs them too.
+        gameTestServer {
+            type = 'gameTestServer'
+            gameDirectory = rootProject.file("run/${minecraft_version}/neoforge/gametest")
+        }
     }
 
     mods {
@@ -65,6 +74,16 @@ neoForge {
 }
 
 sourceSets.main.resources.srcDir('src/generated/resources')
+
+// For mods the dev runs need but the published jar must not depend on (a
+// recipe viewer, a mod to test compatibility with), as in the MDK. Unlike
+// runtimeOnly, nothing here ends up in the published metadata. Loom has the
+// same built in on Fabric (localRuntime, and modLocalRuntime on 1.21.x).
+// localRuntime "maven.modrinth:jei:<version>"
+configurations {
+    localRuntime
+    runtimeClasspath.extendsFrom localRuntime
+}
 
 // Regenerates neoforge.mods.toml on every IDE sync, as the MDK does.
 neoForge.ideSyncTask tasks.named('generateModMetadata')
