@@ -59,14 +59,23 @@ jobs:
           # Spaces kept: it is a display name.
           mod_name=$(grep -E "^mod_name=" gradle.properties | head -n1 | cut -d= -f2- | sed 's/[[:space:]]*$//')
           echo "mod_name=$mod_name" >> "$GITHUB_OUTPUT"
+          # The Java Gradle itself runs on, which can be newer than the one
+          # the mod is compiled for (Loom 1.19+ needs 25).
+          daemon=$(grep -E "^toolchainVersion=" gradle/gradle-daemon-jvm.properties | cut -d= -f2 | tr -d '[:space:]')
+          echo "daemon_java_version=${daemon:-$(grep -E '^java_version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')}" >> "$GITHUB_OUTPUT"
 
-      # The JDK java_version asks for. Without it, foojay downloads the right
-      # one mid-build: it works, but it re-downloads every run and turns an
-      # outage in someone else's service into a failed build.
+      # Both JDKs: the one the mod is compiled for (java_version) and the one
+      # Gradle runs on. The last one listed becomes JAVA_HOME, so gradlew
+      # starts on the daemon's; the Build step points Gradle at the other.
+      # Without them, foojay downloads the right one mid-build: it works, but
+      # it re-downloads every run and turns an outage in someone else's
+      # service into a failed build.
       - name: Set up JDK
         uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
-          java-version: ${{ steps.gradle_props.outputs.java_version }}
+          java-version: |
+            ${{ steps.gradle_props.outputs.java_version }}
+            ${{ steps.gradle_props.outputs.daemon_java_version }}
           distribution: "temurin"
 
       - name: Setup Gradle
@@ -88,8 +97,12 @@ jobs:
           [ ${#loaders[@]} -gt 0 ] || { echo "No loader module found"; exit 1; }
           echo "loaders=[$(IFS=,; echo "${loaders[*]}")]" >> "$GITHUB_OUTPUT"
 
+      # setup-java leaves each JDK in JAVA_HOME_<version>_X64, where Gradle
+      # does not look for toolchains on its own.
       - name: Build
-        run: ./gradlew build
+        env:
+          JAVA: ${{ steps.gradle_props.outputs.java_version }}
+        run: ./gradlew build "-Porg.gradle.java.installations.fromEnv=JAVA_HOME_${JAVA}_X64"
 
       # Named exactly: a glob would also pick up the sources and javadoc jars.
       - name: Collect jars
