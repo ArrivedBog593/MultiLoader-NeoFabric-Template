@@ -1,0 +1,6 @@
+blank_issues_enabled: true
+# Links shown next to the issue templates, for example the mod's page:
+# contact_links:
+#   - name: CurseForge page
+#     url: https://www.curseforge.com/minecraft/mc-mods/your-mod
+#     about: Downloads, description and the full list of features.
