@@ -30,7 +30,7 @@ plugins {
 // Must match the folder's name: IntelliJ names the root module after this,
 // and one that differs from the folder is shown with the name in brackets
 // (IDEA-317606). Rename both together.
-rootProject.name = 'MultiLoader-Template-Mario'
+rootProject.name = 'MultiLoader-NeoFabric-Template'
 
 // The multiloader-common and multiloader-loader convention plugins. An
 // included build rather than buildSrc: Gradle builds and caches it like any
