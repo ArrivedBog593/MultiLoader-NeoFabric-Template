@@ -18,7 +18,7 @@ updates:
     directory: "/"
     target-branch: "NeoFabric/1.21.1"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
     commit-message:
       prefix: "chore"
     groups:
@@ -29,7 +29,7 @@ updates:
     directory: "/"
     target-branch: "NeoFabric/1.21.11"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
     commit-message:
       prefix: "chore"
     groups:
@@ -40,7 +40,7 @@ updates:
     directory: "/"
     target-branch: "NeoFabric/26.1.2"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
     commit-message:
       prefix: "chore"
     groups:
@@ -51,7 +51,7 @@ updates:
     directory: "/"
     target-branch: "NeoFabric/26.2"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
     commit-message:
       prefix: "chore"
     groups:
@@ -62,7 +62,7 @@ updates:
     directory: "/"
     target-branch: "NeoFabric/26.3"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
     commit-message:
       prefix: "chore"
     groups:
@@ -73,7 +73,7 @@ updates:
     directory: "/"
     target-branch: "NeoFabric/1.21.1"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
     commit-message:
       prefix: "chore"
     allow:
@@ -83,7 +83,7 @@ updates:
     directory: "/"
     target-branch: "NeoFabric/1.21.11"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
     commit-message:
       prefix: "chore"
     allow:
@@ -93,7 +93,7 @@ updates:
     directory: "/"
     target-branch: "NeoFabric/26.1.2"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
     commit-message:
       prefix: "chore"
     allow:
@@ -103,7 +103,7 @@ updates:
     directory: "/"
     target-branch: "NeoFabric/26.2"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
     commit-message:
       prefix: "chore"
     allow:
@@ -113,7 +113,7 @@ updates:
     directory: "/"
     target-branch: "NeoFabric/26.3"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
     commit-message:
       prefix: "chore"
     allow:
